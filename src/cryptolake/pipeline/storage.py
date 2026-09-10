@@ -6,6 +6,10 @@ from pathlib import Path
 import polars as pl
 import structlog
 
+from cryptolake.schemas.ohlcv import OHLCV_SCHEMA
+from cryptolake.schemas.ticker import TICKER_SCHEMA
+from cryptolake.schemas.trades import TRADE_SCHEMA
+
 logger = structlog.get_logger()
 
 
@@ -110,6 +114,10 @@ def read_ohlcv(
     end: datetime | None = None,
 ) -> pl.LazyFrame:
     """Read OHLCV data with predicate pushdown."""
+    target_dir = data_dir / "ohlcv"
+    if not target_dir.exists() or not any(target_dir.glob("**/*.parquet")):
+        return pl.DataFrame(schema=OHLCV_SCHEMA).lazy()
+
     pattern = f"{data_dir}/ohlcv/**/*.parquet"
     lf = pl.scan_parquet(pattern)
 
@@ -138,6 +146,10 @@ def read_trades(
     end: datetime | None = None,
 ) -> pl.LazyFrame:
     """Read trades data with predicate pushdown."""
+    target_dir = data_dir / "trades"
+    if not target_dir.exists() or not any(target_dir.glob("**/*.parquet")):
+        return pl.DataFrame(schema=TRADE_SCHEMA).lazy()
+
     pattern = f"{data_dir}/trades/**/*.parquet"
     lf = pl.scan_parquet(pattern)
 
@@ -164,6 +176,10 @@ def read_tickers(
     end: datetime | None = None,
 ) -> pl.LazyFrame:
     """Read tickers data with predicate pushdown."""
+    target_dir = data_dir / "tickers"
+    if not target_dir.exists() or not any(target_dir.glob("**/*.parquet")):
+        return pl.DataFrame(schema=TICKER_SCHEMA).lazy()
+
     pattern = f"{data_dir}/tickers/**/*.parquet"
     lf = pl.scan_parquet(pattern)
 

@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import cryptolake
-from cryptolake.api.routes import compare, download, metadata, ohlcv, tickers
+from cryptolake.api.routes import compare, download, math, metadata, ohlcv, tickers
 
 
 def create_app() -> FastAPI:
@@ -26,6 +26,7 @@ def create_app() -> FastAPI:
     app.include_router(ohlcv.router)
     app.include_router(tickers.router)
     app.include_router(compare.router)
+    app.include_router(math.router)
     app.include_router(metadata.router)
     app.include_router(download.router)
 

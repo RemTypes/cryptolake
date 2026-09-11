@@ -37,6 +37,7 @@ cryptolake status
 ```
 GET /api/v1/ohlcv/{exchange}/{symbol}?interval=1h&start=2024-01-01&end=2024-06-01
 GET /api/v1/tickers
+GET /api/v1/compare/{symbol}
 GET /api/v1/metadata/exchanges
 GET /api/v1/download/ohlcv/{exchange}/{symbol}
 ```

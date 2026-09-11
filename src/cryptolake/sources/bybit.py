@@ -267,14 +267,16 @@ class BybitSource(BaseSource):
                 pl.lit(self.name).alias("exchange"),
                 pl.col("symbol").alias("base"),
                 pl.lit(None).cast(pl.String).alias("quote"),
-                pl.col("lastPrice").cast(pl.Float64).alias("last_price"),
-                pl.col("bid1Price").cast(pl.Float64).alias("bid_price"),
-                pl.col("ask1Price").cast(pl.Float64).alias("ask_price"),
-                pl.col("highPrice24h").cast(pl.Float64).alias("high_24h"),
-                pl.col("lowPrice24h").cast(pl.Float64).alias("low_24h"),
-                pl.col("volume24h").cast(pl.Float64).alias("volume_24h_base"),
-                pl.col("turnover24h").cast(pl.Float64).alias("volume_24h_quote"),
-                (pl.col("price24hPcnt").cast(pl.Float64) * 100.0).alias("price_change_pct"),
+                pl.col("lastPrice").cast(pl.Float64, strict=False).alias("last_price"),
+                pl.col("bid1Price").cast(pl.Float64, strict=False).alias("bid_price"),
+                pl.col("ask1Price").cast(pl.Float64, strict=False).alias("ask_price"),
+                pl.col("highPrice24h").cast(pl.Float64, strict=False).alias("high_24h"),
+                pl.col("lowPrice24h").cast(pl.Float64, strict=False).alias("low_24h"),
+                pl.col("volume24h").cast(pl.Float64, strict=False).alias("volume_24h_base"),
+                pl.col("turnover24h").cast(pl.Float64, strict=False).alias("volume_24h_quote"),
+                (pl.col("price24hPcnt").cast(pl.Float64, strict=False) * 100.0).alias(
+                    "price_change_pct"
+                ),
             ]
         ).select(
             [

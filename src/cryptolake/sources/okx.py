@@ -271,8 +271,11 @@ class OKXSource(BaseSource):
                 pl.col("instId").str.split("-").list.get(0).alias("base"),
                 pl.col("instId").str.split("-").list.get(1).alias("quote"),
                 (
-                    (pl.col("last").cast(pl.Float64) - pl.col("open24h").cast(pl.Float64))
-                    / pl.col("open24h").cast(pl.Float64)
+                    (
+                        pl.col("last").cast(pl.Float64, strict=False)
+                        - pl.col("open24h").cast(pl.Float64, strict=False)
+                    )
+                    / pl.col("open24h").cast(pl.Float64, strict=False)
                     * 100.0
                 ).alias("price_change_pct"),
             ]
@@ -282,13 +285,13 @@ class OKXSource(BaseSource):
                 pl.lit(self.name).alias("exchange"),
                 pl.col("base"),
                 pl.col("quote"),
-                pl.col("last").cast(pl.Float64).alias("last_price"),
-                pl.col("bidPx").cast(pl.Float64).alias("bid_price"),
-                pl.col("askPx").cast(pl.Float64).alias("ask_price"),
-                pl.col("high24h").cast(pl.Float64),
-                pl.col("low24h").cast(pl.Float64),
-                pl.col("vol24h").cast(pl.Float64).alias("volume_24h_base"),
-                pl.col("volCcy24h").cast(pl.Float64).alias("volume_24h_quote"),
-                pl.col("price_change_pct").cast(pl.Float64),
+                pl.col("last").cast(pl.Float64, strict=False).alias("last_price"),
+                pl.col("bidPx").cast(pl.Float64, strict=False).alias("bid_price"),
+                pl.col("askPx").cast(pl.Float64, strict=False).alias("ask_price"),
+                pl.col("high24h").cast(pl.Float64, strict=False),
+                pl.col("low24h").cast(pl.Float64, strict=False),
+                pl.col("vol24h").cast(pl.Float64, strict=False).alias("volume_24h_base"),
+                pl.col("volCcy24h").cast(pl.Float64, strict=False).alias("volume_24h_quote"),
+                pl.col("price_change_pct").cast(pl.Float64, strict=False),
             ]
         )

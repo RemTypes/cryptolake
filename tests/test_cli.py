@@ -33,3 +33,11 @@ def test_cli_inspect_file() -> None:
         result = runner.invoke(app, ["inspect", str(parquet_file), "--rows", "3"])
         assert result.exit_code == 0
         assert "Preview" in result.output
+
+
+def test_cli_ingest_help() -> None:
+    result = runner.invoke(app, ["ingest", "--help"])
+    assert result.exit_code == 0
+    assert "--days" in result.output
+    assert "--tickers" in result.output
+

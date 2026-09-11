@@ -15,7 +15,7 @@ from rich.table import Table
 
 from cryptolake.config import Settings
 from cryptolake.pipeline import storage
-from cryptolake.pipeline.ingest import ingest_ohlcv
+from cryptolake.pipeline.ingest import ingest_ohlcv, ingest_tickers
 from cryptolake.sources import (
     BaseSource,
     BinanceSource,
@@ -63,6 +63,8 @@ def ingest(
     interval: Annotated[
         list[str] | None, typer.Option("--interval", help="Candle intervals")
     ] = None,
+    days: Annotated[int, typer.Option("--days", help="Days of history to ingest (default: 3)")] = 3,
+    tickers: Annotated[bool, typer.Option("--tickers", help="Also ingest 24h ticker snapshots")] = False,
     start: Annotated[
         str | None, typer.Option("--start", help="Start datetime (ISO format)")
     ] = None,
@@ -84,7 +86,7 @@ def ingest(
     start_dt = (
         datetime.datetime.fromisoformat(start)
         if start
-        else datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
+        else datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=days)
     )
     end_dt = (
         datetime.datetime.fromisoformat(end)
@@ -123,7 +125,9 @@ def ingest(
     )
     console.print(f"  Symbols: {[f'{b}/{q}' for b, q in symbols_parsed]}")
     console.print(f"  Intervals: {intervals_to_run}")
-    console.print(f"  Range: {start_dt.date()} → {end_dt.date()}")
+    console.print(f"  Range: {start_dt.date()} → {end_dt.date()} ({days} days)")
+    if tickers:
+        console.print("  Including: 24h Ticker snapshots")
 
     # Run the async pipeline
     async def _run() -> None:
@@ -140,6 +144,14 @@ def ingest(
 
                 for report in reports:
                     _print_report(report)
+
+                if tickers:
+                    ticker_reports = await ingest_tickers(
+                        sources=[source],
+                        data_dir=target_data_dir,
+                    )
+                    for report in ticker_reports:
+                        _print_report(report)
 
     asyncio.run(_run())
     console.print("[bold green]✓ Ingestion complete![/bold green]")

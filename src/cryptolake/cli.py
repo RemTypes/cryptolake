@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+from collections.abc import Callable
 from pathlib import Path
 from typing import Annotated
 
@@ -14,8 +15,16 @@ from rich.table import Table
 from cryptolake.config import Settings
 from cryptolake.pipeline import storage
 from cryptolake.pipeline.ingest import ingest_ohlcv
-from cryptolake.sources.binance import BinanceSource
-from cryptolake.sources.coingecko import CoinGeckoSource
+from cryptolake.sources import (
+    BaseSource,
+    BinanceSource,
+    BybitSource,
+    CoinbaseSource,
+    CoinGeckoSource,
+    CryptoCompareSource,
+    KrakenSource,
+    OKXSource,
+)
 
 app = typer.Typer(
     name="cryptolake",
@@ -86,17 +95,22 @@ def ingest(
     target_data_dir.mkdir(parents=True, exist_ok=True)
 
     # Build source instances
-    source_map = {
+    source_map: dict[str, Callable[[], BaseSource]] = {
         "binance": BinanceSource,
+        "bybit": BybitSource,
+        "coinbase": CoinbaseSource,
         "coingecko": CoinGeckoSource,
+        "cryptocompare": CryptoCompareSource,
+        "kraken": KrakenSource,
+        "okx": OKXSource,
     }
-    sources = []
+    sources: list[BaseSource] = []
     for exch in exchanges_to_run:
-        cls = source_map.get(exch.lower())
-        if cls is None:
+        factory = source_map.get(exch.lower())
+        if factory is None:
             console.print(f"[yellow]Warning: Unknown exchange '{exch}'[/yellow]")
         else:
-            sources.append(cls())
+            sources.append(factory())
 
     if not sources:
         console.print("[red]No valid sources configured.[/red]")

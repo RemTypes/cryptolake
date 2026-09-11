@@ -64,7 +64,9 @@ def ingest(
         list[str] | None, typer.Option("--interval", help="Candle intervals")
     ] = None,
     days: Annotated[int, typer.Option("--days", help="Days of history to ingest (default: 3)")] = 3,
-    tickers: Annotated[bool, typer.Option("--tickers", help="Also ingest 24h ticker snapshots")] = False,
+    tickers: Annotated[
+        bool, typer.Option("--tickers", help="Also ingest 24h ticker snapshots")
+    ] = False,
     start: Annotated[
         str | None, typer.Option("--start", help="Start datetime (ISO format)")
     ] = None,

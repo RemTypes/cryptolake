@@ -18,46 +18,97 @@ CryptoLake normalises all of this into one clean schema.
 
 ## Quick Start
 
+### 1. Backend & Data Lake
 ```bash
-# Install
+# Install Python package in editable mode
 pip install -e ".[dev]"
 
-# Ingest data from Binance
-cryptolake ingest --exchange binance --symbol BTC/USDT --interval 1h --start 2024-01-01
+# Ingest multi-exchange data (e.g. past 3 days across 5 exchanges)
+cryptolake ingest --days 3
 
-# Start the API server
-cryptolake serve
-
-# Check what data you have
-cryptolake status
-
-# Inspect & preview parquet files directly
+# Inspect & preview parquet partitions
 cryptolake inspect
 cryptolake inspect data/ohlcv/binance/BTC-USDT/1h/2026-09-08.parquet --rows 5
+
+# Start the high-performance FastAPI server
+cryptolake serve --port 8000
 ```
 
-## API
+### 2. Next.js 15 Quantitative Terminal & Math Lab
+```bash
+# Navigate to frontend and install dependencies
+cd frontend
+npm install
+
+# Run the development server (proxies /api/v1 to 127.0.0.1:8000)
+npm run dev
+
+# Or build and launch the production terminal
+npm run build
+npm run start
+```
+Terminal interface available at `http://localhost:3000`.
+
+---
+
+## Architecture & Mathematical Research Modules
+
+CryptoLake features an integrated quantitative research workbench applying pure mathematics from 2nd-year undergraduate mathematics (Topology, Differential Geometry of Surfaces, Applied Probability, and Econometric Statistics):
+
+1. **Topological Delay Embedding & Phase Space Reconstruction (`/api/v1/math/tda/takens`)**:
+   - Reconstructs $m$-dimensional dynamical attractor manifolds from 1D scalar return streams via **Takens' Delay Embedding Theorem** ($v_t = (r_{t-2\tau}, r_{t-\tau}, r_t) \in \mathbb{R}^3$).
+   - Calculates sliding-window **topological entropy** to detect phase space dimension collapses before volatility cascades.
+
+2. **Riemannian Correlation Geometry & Multidimensional Scaling (`/api/v1/math/geometry/correlation`)**:
+   - Maps cross-asset correlation matrices $\mathbf{C} \in [-1, 1]^{N \times N}$ into an ultrametric Riemannian space via Mantegna's metric $d_{ij} = \sqrt{2(1 - \rho_{ij})}$.
+   - Double-centers the distance matrix ($B = -\frac{1}{2} H D^2 H$) and executes spectral eigendecomposition (Classical MDS) to embed assets into 2D/3D Euclidean geometric configurations.
+
+3. **Statistical Microstructure & Heavy-Tailed Distributions (`/api/v1/math/stats/distribution`)**:
+   - Tests financial stylized facts (Mandelbrot 1963, Cont 2001): leptokurtosis, skewness, and volatility clustering.
+   - Fits parametric **Student-$t$ distributions** via Maximum Likelihood Estimation (MLE) alongside Gaussian benchmarks and Quantile-Quantile (QQ) plots.
+   - Evaluates **Jarque-Bera normality hypothesis tests**.
+
+4. **Multi-Exchange Orderbook Arbitrage & Effective Spreads (`/api/v1/math/microstructure/spreads`)**:
+   - Real-time bid-ask dispersion matrices across Binance, Coinbase, Kraken, OKX, and Bybit identifying instantaneous cross-venue arbitrage basis points.
+
+---
+
+## API Reference
 
 ```
-GET /api/v1/ohlcv/{exchange}/{symbol}?interval=1h&start=2024-01-01&end=2024-06-01
+# Data Lake & OHLCV
+GET /api/v1/ohlcv/{exchange}/{symbol}?interval=1h&start=2026-09-08&end=2026-09-11
 GET /api/v1/tickers
 GET /api/v1/compare/{symbol}
 GET /api/v1/metadata/exchanges
-GET /api/v1/download/ohlcv/{exchange}/{symbol}
+GET /api/v1/metadata/symbols
+GET /api/v1/download/ohlcv/{exchange}/{symbol}?interval=1h&format=parquet
+
+# Quantitative Mathematics Lab
+GET /api/v1/math/tda/takens?symbol=BTC-USDT&exchange=binance&tau=2&dim=3
+GET /api/v1/math/geometry/correlation?interval=1h
+GET /api/v1/math/stats/distribution?symbol=ETH-USDT&exchange=binance&interval=1h
+GET /api/v1/math/microstructure/spreads?symbol=BTC-USDT
 ```
 
-Full interactive docs at `http://localhost:8000/docs`.
+Interactive OpenAPI documentation available at `http://localhost:8000/docs` and built-in research documentation at `http://localhost:3000/docs`.
 
 ## Project Structure
 
 ```
-src/cryptolake/
-├── config.py           # Settings (env vars / .env)
-├── schemas/            # Canonical Parquet schemas (OHLCV, trades, tickers)
-├── sources/            # Exchange adapters (Binance, CoinGecko, ...)
-├── pipeline/           # Ingestion, normalisation, validation, storage
-├── api/                # FastAPI application
-└── cli.py              # CLI entry point
+cryptolake/
+├── src/cryptolake/
+│   ├── api/                 # FastAPI routes (ohlcv, tickers, compare, math, metadata)
+│   ├── config.py            # Lake directory configuration & settings
+│   ├── pipeline/            # Ingestion, schema validation, storage, normalisation
+│   ├── schemas/             # PyArrow canonical schemas (OHLCV, trades, tickers)
+│   ├── sources/             # Exchange adapters (Binance, Coinbase, Kraken, OKX, Bybit)
+│   └── cli.py               # Rich CLI with inspect, ingest, serve, status
+├── frontend/                # Next.js 15 + Tailwind + Plotly + KaTeX + Lightweight Charts
+│   ├── src/app/             # Dashboard, Datasets, Terminal, Math Lab, Docs
+│   └── src/components/      # 3D Plotly canvas, Candlestick, KaTeX math renderer
+├── data/                    # Unified multi-exchange Apache Parquet lake
+└── tests/                   # Pytest suite with 56 unit & integration tests
 ```
 
 ## Data Format

@@ -40,4 +40,3 @@ def test_cli_ingest_help() -> None:
     assert result.exit_code == 0
     assert "--days" in result.output
     assert "--tickers" in result.output
-

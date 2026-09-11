@@ -6,6 +6,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Annotated
 
+import polars as pl
 import structlog
 import typer
 import uvicorn
@@ -226,6 +227,97 @@ def info() -> None:
         table.add_row(key, str(value))
 
     console.print(table)
+
+
+def _format_cell(val: object) -> str:
+    if isinstance(val, float):
+        return f"{val:,.4f}"
+    if isinstance(val, datetime.datetime):
+        return val.strftime("%Y-%m-%d %H:%M")
+    return str(val)
+
+
+def _render_df_table(df: pl.DataFrame, title: str) -> Table:
+    table = Table(title=title, show_lines=False)
+    for col in df.columns:
+        table.add_column(
+            col,
+            style="cyan" if col in ("timestamp", "exchange", "base", "quote") else "magenta",
+        )
+    for row in df.iter_rows():
+        table.add_row(*[_format_cell(v) for v in row])
+    return table
+
+
+@app.command()
+def inspect(
+    file_path: Annotated[
+        Path | None,
+        typer.Argument(help="Optional path to a specific .parquet file to preview"),
+    ] = None,
+    dataset: Annotated[
+        str, typer.Option("--dataset", "-d", help="Dataset directory (ohlcv, tickers, trades)")
+    ] = "ohlcv",
+    exchange: Annotated[
+        str | None, typer.Option("--exchange", "-e", help="Filter by exchange")
+    ] = None,
+    symbol: Annotated[str | None, typer.Option("--symbol", "-s", help="Filter by symbol")] = None,
+    rows: Annotated[int, typer.Option("--rows", "-n", help="Number of rows to display")] = 10,
+    tail: Annotated[bool, typer.Option("--tail", help="Show last rows instead of first")] = False,
+) -> None:
+    """Inspect and preview Parquet files in the lake."""
+    settings = Settings()
+    data_dir = settings.data_dir
+
+    target_file = file_path
+    if target_file is None:
+        pattern = f"{dataset}/**/*.parquet"
+        found_files = sorted(data_dir.glob(pattern))
+        if exchange:
+            found_files = [f for f in found_files if exchange.lower() in str(f).lower()]
+        if symbol:
+            sym_clean = symbol.replace("/", "-").upper()
+            found_files = [f for f in found_files if sym_clean in str(f).upper()]
+
+        if not found_files:
+            console.print(f"[yellow]No parquet files found matching dataset '{dataset}'.[/yellow]")
+            return
+
+        table = Table(title=f"📁 Parquet Files Found ({len(found_files)})")
+        table.add_column("Path", style="cyan")
+        table.add_column("Rows", style="green")
+        table.add_column("Columns", style="blue")
+        table.add_column("Size", style="magenta")
+
+        for f in found_files:
+            try:
+                df_meta = pl.read_parquet(f)
+                size_str = f"{f.stat().st_size / 1024:.1f} KB"
+                try:
+                    rel_path = str(f.relative_to(Path.cwd()))
+                except ValueError:
+                    rel_path = str(f)
+                table.add_row(rel_path, str(df_meta.height), str(df_meta.width), size_str)
+            except Exception as err:
+                table.add_row(str(f), "Error", "Error", str(err))
+
+        console.print(table)
+        target_file = found_files[-1]
+        try:
+            rel_target = str(target_file.relative_to(Path.cwd()))
+        except ValueError:
+            rel_target = str(target_file)
+        console.print(f"\n[bold]Previewing latest file:[/bold] [dim]{rel_target}[/dim]\n")
+
+    if not target_file.exists():
+        console.print(f"[red]File not found: {target_file}[/red]")
+        raise typer.Exit(1)
+
+    df = pl.read_parquet(target_file)
+    preview_df = df.tail(rows) if tail else df.head(rows)
+    action = "Last" if tail else "First"
+    title = f"Preview: {target_file.name} ({action} {min(rows, df.height)} of {df.height} rows)"
+    console.print(_render_df_table(preview_df, title))
 
 
 if __name__ == "__main__":

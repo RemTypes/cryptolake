@@ -30,6 +30,10 @@ cryptolake serve
 
 # Check what data you have
 cryptolake status
+
+# Inspect & preview parquet files directly
+cryptolake inspect
+cryptolake inspect data/ohlcv/binance/BTC-USDT/1h/2026-09-08.parquet --rows 5
 ```
 
 ## API

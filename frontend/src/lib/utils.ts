@@ -22,3 +22,4 @@ export function formatBps(val: number | null | undefined): string {
   if (val === null || val === undefined || isNaN(val)) return "—";
   return (val >= 0 ? "+" : "") + formatNumber(val, 2) + " bps";
 }
+

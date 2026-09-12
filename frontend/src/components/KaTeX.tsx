@@ -28,3 +28,4 @@ export const KaTeX: React.FC<KaTeXProps> = ({ math, block = false, className = "
     />
   );
 };
+

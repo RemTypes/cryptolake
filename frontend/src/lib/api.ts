@@ -219,3 +219,4 @@ export const api = {
     return `${API_BASE}/api/v1/download/ohlcv/${exchange}/${symbol}?interval=${interval}&format=${format}`;
   }
 };
+

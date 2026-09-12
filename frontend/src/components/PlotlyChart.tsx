@@ -79,3 +79,4 @@ export const PlotlyChart: React.FC<PlotlyChartProps> = ({
     </div>
   );
 };
+
